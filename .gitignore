@@ -1,6 +1,44 @@
-*
-!README.md
-!early-init.el
-!init.el
-!.github/
-!.LICENSE
+# Byte-compiled Elisp
+*.elc
+
+# Package manager
+elpa/
+
+# Native compilation cache
+eln-cache/
+
+# Backup and auto-save
+backup/
+autosave/
+tramp-autosave/
+
+# Emacs state files
+bookmarks
+recentf
+saveplace
+history
+projects
+abbrev_defs
+custom.el
+ielm-history.eld
+
+# Package quickstart cache
+package-quickstart.el
+package-quickstart.el~
+
+# Application state
+eshell/
+transient/
+tramp
+games/
+undo-fu-session/
+
+# Forge database
+forge-database.sqlite
+
+# Tree-sitter grammars
+tree-sitter/
+
+# Claude Code
+.claude/
+agents/
