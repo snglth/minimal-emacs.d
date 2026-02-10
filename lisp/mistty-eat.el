@@ -358,7 +358,8 @@ while maintaining compatibility with MisTTY's expected buffer structure."
           ;; TRAMP compatibility (from MisTTY)
           ;; TRAMP sets adjust-window-size-function to #'ignore, which
           ;; prevents normal terminal resizing from working. Turn it on again.
-          (process-put proc 'adjust-window-size-function nil)
+          (process-put proc 'adjust-window-size-function
+                       #'mistty-eat--adjust-process-window-size)
 
           ;; Set process window size
           (set-process-window-size proc height width)
@@ -454,18 +455,76 @@ instead of term.el's home-marker."
 
 ;;; Terminal Resizing
 
-(defun mistty-eat--handle-resize (buffer width height)
-  "Handle terminal resize for BUFFER to WIDTH and HEIGHT.
-Updates Eat terminal dimensions if Eat backend is enabled."
-  (when mistty-eat-backend-enabled
-    (with-current-buffer buffer
-      (when eat-terminal
-        ;; Update stored dimensions
-        (setq-local mistty-eat--width width)
-        (setq-local mistty-eat--height height)
+(defun mistty-eat--resize-advice (orig-fun width height)
+  "Around-advice for `mistty--set-process-window-size' to resize Eat terminal.
+ORIG-FUN is the original function.  WIDTH and HEIGHT are the requested
+terminal dimensions.  This runs in the work buffer context, where
+`mistty-term-buffer' is available.
 
-        ;; Resize Eat terminal
-        (eat-term-resize eat-terminal width height)))))
+When the Eat backend is active, this skips ORIG-FUN entirely to prevent
+`term-reset-size' from corrupting the buffer with fake newlines via
+`term--unwrap-visible-long-lines'.  Instead it sends SIGWINCH directly,
+resizes via Eat, and updates the compatibility variables MisTTY expects."
+  (if (and mistty-eat-backend-enabled
+           (boundp 'mistty-term-buffer)
+           (buffer-live-p mistty-term-buffer)
+           (buffer-local-value 'eat-terminal mistty-term-buffer))
+      ;; Eat backend active -- bypass term-reset-size completely
+      (with-current-buffer mistty-term-buffer
+        (let ((w (max width mistty-min-terminal-width))
+              (h (max height mistty-min-terminal-height))
+              (proc (get-buffer-process (current-buffer))))
+          ;; 1. Send SIGWINCH so the shell knows about the new size
+          (when proc
+            (set-process-window-size proc h w))
+          ;; 2. Let Eat reflow its own buffer content
+          (let ((inhibit-read-only t))
+            (eat-term-resize eat-terminal w h)
+            (eat-term-redisplay eat-terminal))
+          ;; 3. Update term-width/term-height (MisTTY copies these during refresh)
+          (setq-local term-width w)
+          (setq-local term-height h)
+          ;; 4. Update our tracking variables
+          (setq-local mistty-eat--width w)
+          (setq-local mistty-eat--height h)
+          ;; 5. Re-sync term-home-marker to Eat's display beginning
+          (when (and (boundp 'term-home-marker) (markerp term-home-marker))
+            (set-marker term-home-marker
+                        (eat-term-display-beginning eat-terminal)))
+          ;; 6. Update process mark to Eat's cursor position
+          (when proc
+            (when-let ((cursor-pos (eat-term-display-cursor eat-terminal)))
+              (set-marker (process-mark proc) cursor-pos)))))
+    ;; Eat not active -- fall through to original (term.el) resize
+    (funcall orig-fun width height)))
+
+(defun mistty-eat--adjust-process-window-size (process windows)
+  "Resize Eat terminal when the process window dimensions change.
+Handles resize during fullscreen mode, when MisTTY's own
+window-size-change hook is not active.  Returns (WIDTH . HEIGHT)
+for Emacs to call `set-process-window-size'."
+  (let ((size (funcall window-adjust-process-window-size-function
+                       process windows)))
+    (when size
+      (let ((w (max (car size) 1))
+            (h (max (cdr size) 1))
+            (buf (process-buffer process)))
+        (when (and buf (buffer-live-p buf))
+          (with-current-buffer buf
+            (when (bound-and-true-p eat-terminal)
+              (let ((inhibit-read-only t))
+                (eat-term-resize eat-terminal w h)
+                (eat-term-redisplay eat-terminal))
+              (setq-local term-width w)
+              (setq-local term-height h)
+              (setq-local mistty-eat--width w)
+              (setq-local mistty-eat--height h)
+              (when (and (boundp 'term-home-marker) (markerp term-home-marker))
+                (set-marker term-home-marker
+                            (eat-term-display-beginning eat-terminal)))
+              (when-let ((cursor-pos (eat-term-display-cursor eat-terminal)))
+                (set-marker (process-mark process) cursor-pos)))))))
+    size))
 
 ;;; Advice Functions (Non-invasive Integration)
 
@@ -652,9 +711,12 @@ It is called automatically when this package is loaded."
   (advice-add 'mistty--create-term :around #'mistty-eat--create-term-advice)
   (advice-add 'mistty--emulate-terminal :around #'mistty-eat--emulate-terminal-advice)
   (advice-add 'mistty--attach :after #'mistty-eat--attach-advice)
+  (advice-add 'mistty--set-process-window-size :around #'mistty-eat--resize-advice)
 
-  ;; Add Evil mode integration hooks
-  (when (featurep 'evil)
+  ;; Add Evil mode integration hooks.
+  ;; Use with-eval-after-load so hooks are registered regardless of
+  ;; whether evil loads before or after mistty-eat.
+  (with-eval-after-load 'evil
     ;; Set initial state when MisTTY starts
     (add-hook 'mistty-mode-hook #'mistty-eat--evil-setup)
     ;; Switch to emacs state when entering fullscreen (for F-keys)
@@ -671,6 +733,7 @@ After uninstalling, MisTTY will use term.el backend exclusively."
   (advice-remove 'mistty--create-term #'mistty-eat--create-term-advice)
   (advice-remove 'mistty--emulate-terminal #'mistty-eat--emulate-terminal-advice)
   (advice-remove 'mistty--attach #'mistty-eat--attach-advice)
+  (advice-remove 'mistty--set-process-window-size #'mistty-eat--resize-advice)
 
   ;; Remove Evil mode integration hooks
   (when (featurep 'evil)
