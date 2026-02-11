@@ -51,6 +51,10 @@
   (setq gptel-agent-dirs
    (list (expand-file-name "agents" user-emacs-directory)))
   (gptel-agent-update)
+
+  (require 'gptel-ediff)
+  (gptel-ediff-register-tool)
+
   ;; Auto-enable gptel-agent tools in gptel buffers
   (add-hook 'gptel-mode-hook
    (lambda ()

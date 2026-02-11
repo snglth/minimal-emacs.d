@@ -21,7 +21,7 @@ Always creates a new terminal buffer."
   (let ((display-buffer-overriding-action
          '((display-buffer-in-direction)
            (direction . bottom)
-           (window-height . 0.3)
+           (window-height . 0.5)
            (inhibit-same-window . t))))
     (mistty-create nil t)))
 
@@ -32,7 +32,7 @@ Always creates a new terminal buffer."
   (let ((display-buffer-overriding-action
          '((display-buffer-in-direction)
            (direction . bottom)
-           (window-height . 0.3)
+           (window-height . 0.5)
            (inhibit-same-window . t))))
     (mistty-create nil t)))
 
@@ -386,6 +386,37 @@ Always creates a new eshell buffer."
     ("E" "new eshell" my/terminal-project-eshell)]
    ["Actions"
     ("k" "kill" my/terminal-kill)]]))
+
+(use-package casual
+ :ensure t
+ :config
+ (casual-ediff-install) ; run this to enable Casual Ediff
+ (add-hook 'ediff-keymap-setup-hook
+  (lambda ()
+   (keymap-set ediff-mode-map "C-o" #'casual-ediff-tmenu)))
+
+ (defun my/ediff-copy-all-B-to-A ()
+  "Copy all difference regions from buffer B to buffer A."
+  (interactive)
+  (ediff-barf-if-not-control-buffer)
+  (dotimes (i ediff-number-of-differences)
+   (ediff-copy-diff i nil 'A nil
+    (ediff-get-region-contents i 'B ediff-control-buffer)))
+  (message "Copied all %d regions from B to A" ediff-number-of-differences))
+
+ (transient-append-suffix 'casual-ediff-tmenu '(0 2 -1)
+  '("Ba" "Accept all B→A" my/ediff-copy-all-B-to-A
+    :transient t
+    :if (lambda () (not (casual-ediff--buffer-read-only-p ediff-buffer-A)))))
+
+ (transient-append-suffix 'casual-ediff-tmenu '(0 2 -1)
+  '("Bq" "Accept all B→A & quit" gptel-ediff--accept-all-and-quit
+    :transient nil
+    :if (lambda () (not (casual-ediff--buffer-read-only-p ediff-buffer-A)))))
+
+ (transient-append-suffix 'casual-ediff-tmenu '(0 2 -1)
+  '("Q" "Quit with comment" gptel-ediff--quit-with-comment
+    :transient nil)))
 
 (provide 'usr-transient)
 ;;; usr-transient.el ends here
