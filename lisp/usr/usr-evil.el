@@ -70,5 +70,10 @@
  :ensure t
  :defer t)
 
+;; Window layout rotation (cycle layouts + rotate buffers)
+(use-package rotate
+ :ensure t
+ :defer t)
+
 (provide 'usr-evil)
 ;;; usr-evil.el ends here

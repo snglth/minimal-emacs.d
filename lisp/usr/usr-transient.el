@@ -204,7 +204,10 @@ Always creates a new eshell buffer."
     ("m" "maximize" maximize-window)
     ("r" "resize" transient-window-resize)
     ("t" "transpose" transpose-frame)
-    ("R" "rotate" rotate-frame-clockwise)]])
+    ("R" "rotate frame" rotate-frame-clockwise)]
+   ["Layout"
+    ("n" "next layout" rotate-layout)
+    ("w" "rotate windows" rotate-window)]])
 
  ;; Window resize menu (stays open for repeated adjustments)
  (transient-define-prefix transient-window-resize ()
