@@ -1,4 +1,4 @@
-;;; usr-editor.el --- Editor behavior configuration -*- no-byte-compile: t; lexical-binding: t; -*-
+;;; usr-editor.el --- Editor behavior configuration -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; Core editor functionality:

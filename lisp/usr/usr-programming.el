@@ -1,4 +1,4 @@
-;;; usr-programming.el --- Programming tools configuration -*- no-byte-compile: t; lexical-binding: t; -*-
+;;; usr-programming.el --- Programming tools configuration -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; Development environment setup:
@@ -22,13 +22,23 @@
             flycheck-verify-setup
             flycheck-describe-checker
             flycheck-disable-checker)
- :hook (prog-mode . flycheck-mode)
+ :hook (prog-mode . my/flycheck-mode-deferred)
  :custom
  (flycheck-emacs-lisp-load-path 'inherit)
  (flycheck-indication-mode 'left-fringe)
  (flycheck-display-errors-function nil)
  (flycheck-checker-error-threshold 100)
  :config
+ (defun my/flycheck-mode-deferred ()
+   "Enable flycheck-mode after a short idle delay."
+   (run-with-idle-timer 1.0 nil
+    (lambda (buf)
+      (when (buffer-live-p buf)
+        (with-current-buffer buf
+          (when (and (not flycheck-mode)
+                     (derived-mode-p 'prog-mode))
+            (flycheck-mode 1)))))
+    (current-buffer)))
  ;; Suppress flycheck warnings via Emacs warning system
  (add-to-list 'warning-suppress-types '(flycheck syntax-checker))
  ;; Suppress "Suspicious state" messages from echo area
@@ -92,11 +102,29 @@
 ;; Elisp, Lua, Markdown, and many others.
 (use-package treesit-auto
  :ensure t
+ :defer 0.1
  :custom
  (treesit-auto-install 'prompt)
  :config
  (treesit-auto-add-to-auto-mode-alist 'all)
- (global-treesit-auto-mode))
+ (global-treesit-auto-mode)
+
+ ;; Cache the remap alist so treesit-language-available-p isn't called
+ ;; for every grammar on every file open. The alist only changes when
+ ;; grammars are installed/removed, which never happens mid-session.
+ (defvar my/treesit-auto--remap-cache nil
+   "Cached result of `treesit-auto--build-major-mode-remap-alist'.")
+ (defun my/treesit-auto--cache-remap-a (orig-fn)
+   "Return cached remap alist, building it only on first call."
+   (or my/treesit-auto--remap-cache
+       (setq my/treesit-auto--remap-cache (funcall orig-fn))))
+ (advice-add 'treesit-auto--build-major-mode-remap-alist
+             :around #'my/treesit-auto--cache-remap-a)
+ ;; Invalidate cache after installing grammars
+ (defun my/treesit-auto-reset-cache ()
+   "Reset treesit-auto remap cache (run after installing new grammars)."
+   (interactive)
+   (setq my/treesit-auto--remap-cache nil)))
 
 ;; Set up the Language Server Protocol (LSP) servers using Eglot.
 (use-package eglot

@@ -1,4 +1,4 @@
-;;; usr-ui.el --- User interface configuration -*- no-byte-compile: t; lexical-binding: t; -*-
+;;; usr-ui.el --- User interface configuration -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; Visual interface settings:

@@ -1,4 +1,4 @@
-;;; usr-files.el --- File management configuration -*- no-byte-compile: t; lexical-binding: t; -*-
+;;; usr-files.el --- File management configuration -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; File handling and persistence:

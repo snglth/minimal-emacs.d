@@ -1,4 +1,4 @@
-;;; usr-git.el --- Git integration configuration -*- no-byte-compile: t; lexical-binding: t; -*-
+;;; usr-git.el --- Git integration configuration -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; Version control tools:
@@ -24,11 +24,22 @@
 
 ;; Git indicators in buffers
 (use-package git-gutter
-  :hook (prog-mode . git-gutter-mode)
+  :hook (prog-mode . my/git-gutter-mode-deferred)
   :config
-  (setq git-gutter:update-interval 0.02))
+  (setq git-gutter:update-interval 0.5)
+  (defun my/git-gutter-mode-deferred ()
+    "Enable git-gutter-mode after a short idle delay."
+    (run-with-idle-timer 0.5 nil
+     (lambda (buf)
+       (when (buffer-live-p buf)
+         (with-current-buffer buf
+           (when (and (not git-gutter-mode)
+                      (derived-mode-p 'prog-mode))
+             (git-gutter-mode 1)))))
+     (current-buffer))))
 
 (use-package git-gutter-fringe
+  :after git-gutter
   :config
   (define-fringe-bitmap 'git-gutter-fr:added [224] nil nil '(center repeated))
   (define-fringe-bitmap 'git-gutter-fr:modified [224] nil nil '(center repeated))
@@ -69,7 +80,8 @@
 
 ;; Install websocket from GitHub to avoid ELPA signature issues
 (use-package websocket
- :vc (:url "https://github.com/ahyatt/emacs-websocket" :rev :newest))
+ :vc (:url "https://github.com/ahyatt/emacs-websocket" :rev :newest)
+ :defer t)
 
 (use-package forge
  :ensure t

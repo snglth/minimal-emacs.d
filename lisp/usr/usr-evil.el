@@ -1,4 +1,4 @@
-;;; usr-evil.el --- Vim emulation configuration -*- no-byte-compile: t; lexical-binding: t; -*-
+;;; usr-evil.el --- Vim emulation configuration -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; Modal editing with Evil:
@@ -63,7 +63,14 @@
  :init
  (setq evil-collection-setup-minibuffer t)
  :config
- (evil-collection-init))
+ (evil-collection-init
+  '(bookmark buff-menu compile consult corfu custom
+    debug diff-mode dired doc-view eat ediff eglot
+    eldoc embark eshell flycheck forge grep help
+    ibuffer imenu info log-edit log-view magit man
+    minibuffer org outline package-menu process-menu
+    python replace sh-script simple vertico
+    wdired xref)))
 
 ;; Window transpose/rotate operations
 (use-package transpose-frame

@@ -1,4 +1,4 @@
-;;; usr-terminal.el --- Terminal emulator configuration -*- no-byte-compile: t; lexical-binding: t; -*-
+;;; usr-terminal.el --- Terminal emulator configuration -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; Terminal emulator setup:
@@ -8,16 +8,15 @@
 
 ;;; Code:
 
-;; Eshell config
-(require 'eshell)
-
-(setq eshell-prompt-function
- (lambda nil
-  (concat
-   (propertize (eshell/pwd) 'face '(:foreground "#8787af"))
-   (propertize " " 'face nil)
-   (propertize "λ" 'face '(:foreground "#8787af"))
-   (propertize " " 'face nil))))
+;; Eshell config (deferred until eshell actually loads)
+(with-eval-after-load 'eshell
+ (setq eshell-prompt-function
+  (lambda nil
+   (concat
+    (propertize (eshell/pwd) 'face '(:foreground "#8787af"))
+    (propertize " " 'face nil)
+    (propertize "λ" 'face '(:foreground "#8787af"))
+    (propertize " " 'face nil)))))
 
 ;; Eat terminal emulator (Emulate A Terminal)
 (use-package eat
@@ -67,7 +66,7 @@
 ;; Benefits: 3x faster, SIXEL graphics, better mouse support
 (use-package mistty-eat
   :load-path "lisp"
-  :demand t
+  :after mistty
   :custom
   (mistty-eat-backend-enabled t))
 

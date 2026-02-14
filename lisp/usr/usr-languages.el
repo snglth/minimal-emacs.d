@@ -1,4 +1,4 @@
-;;; usr-languages.el --- Language-specific configuration -*- no-byte-compile: t; lexical-binding: t; -*-
+;;; usr-languages.el --- Language-specific configuration -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; Programming language support:

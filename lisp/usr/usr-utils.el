@@ -1,4 +1,4 @@
-;;; usr-utils.el --- Utility packages configuration -*- no-byte-compile: t; lexical-binding: t; -*-
+;;; usr-utils.el --- Utility packages configuration -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; Miscellaneous utility packages:
@@ -81,16 +81,19 @@
 
 ;; Salt inventory host selector
 (use-package yaml
- :ensure t)
+ :ensure t
+ :defer t)
 
 (use-package async
- :ensure t)
+ :ensure t
+ :defer t)
 
 (use-package nyan-mode
  :ensure t
  :hook (after-init . nyan-mode))
 
 (use-package diminish
+ :defer 1
  :config
  (diminish 'abbrev-mode)
  (diminish 'flyspell-mode)
@@ -114,10 +117,12 @@
 
 (use-package focus-mode
  :vc (:url "https://git.sr.ht/~mgmarlow/focus-mode"
-      :rev :newest))
+      :rev :newest)
+ :defer t)
 
 (use-package daemons
- :ensure t)
+ :ensure t
+ :defer t)
 
 (use-package dired-rsync
  :ensure t
@@ -125,7 +130,8 @@
         ("C-c C-r" . dired-rsync)))
 
 (use-package dired-rsync-transient
- :ensure t)
+ :ensure t
+ :defer t)
 
 (use-package eshell-atuin
  :vc (:url "https://github.com/SqrtMinusOne/eshell-atuin"

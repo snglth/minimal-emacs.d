@@ -1,4 +1,4 @@
-;;; usr-env.el --- Environment and package settings -*- no-byte-compile: t; lexical-binding: t; -*-
+;;; usr-env.el --- Environment and package settings -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; Basic environment configuration:

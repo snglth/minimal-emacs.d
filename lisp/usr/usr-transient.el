@@ -1,4 +1,4 @@
-;;; usr-transient.el --- Transient menu system -*- no-byte-compile: t; lexical-binding: t; -*-
+;;; usr-transient.el --- Transient menu system -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; Comprehensive transient menu system for navigation and actions.

@@ -1,4 +1,4 @@
-;;; usr-completion.el --- Completion framework configuration -*- no-byte-compile: t; lexical-binding: t; -*-
+;;; usr-completion.el --- Completion framework configuration -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; Modern completion system:
@@ -56,13 +56,13 @@
 ;; with Corfu (UI), Cape (backends), and Orderless (matching), providing
 ;; intelligent, context-aware completions with descriptions. Falls back
 ;; gracefully to Cape backends when unavailable or for unsupported commands.
-(use-package eshell-carapace
- :load-path "lisp"
- :custom
- (eshell-carapace-executable "carapace")
- (eshell-carapace-timeout 2)
- :init
- (add-hook 'eshell-mode-hook #'eshell-carapace-mode))
+;; (use-package eshell-carapace
+;;  :load-path "lisp"
+;;  :custom
+;;  (eshell-carapace-executable "carapace")
+;;  (eshell-carapace-timeout 2)
+;;  :init
+;;  (add-hook 'eshell-mode-hook #'eshell-carapace-mode))
 
 ;; Vertico provides a vertical completion interface, making it easier to
 ;; navigate and select from completion candidates (e.g., when `M-x` is pressed).
@@ -206,8 +206,10 @@
   consult-source-bookmark consult-source-file-register
   consult-source-recent-file consult-source-project-recent-file
   ;; :preview-key "M-."
-  :preview-key '(:debounce 0.4 any))
- (setq consult-narrow-key "<"))
+  :preview-key '(:debounce 0.6 any))
+ (setq consult-narrow-key "<")
+ ;; Suppress git-gutter updates during consult preview
+ (add-to-list 'consult-preview-variables '(git-gutter:update-interval . 999)))
 
 (provide 'usr-completion)
 ;;; usr-completion.el ends here
